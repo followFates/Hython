@@ -13,12 +13,6 @@ options {
 // The suffix '^' means make it a root.
 // The suffix '!' means ignore it.
 
-defid_expr
-    : DEF! defid (','! defid)* 
-    ;
-defid
-    : ID^ (ASSIGN! expr)?
-    ;
 
 expr: multExpr ((PLUS^ | MINUS^) multExpr)*
     ;
@@ -68,6 +62,15 @@ block
     : '{'! (stmt)* '}'!
     ;
 
+
+prog
+    : (stmt {
+            pANTLR3_STRING s = $stmt.tree->toStringTree($stmt.tree);
+            assert(s->chars);
+            printf("tree \%s\n", s->chars);
+    })+
+    ;
+
 stmt: expr ';' -> expr  // tree rewrite syntax
     | defid_expr ';' -> ^(DEF defid_expr)
     | ID ASSIGN expr ';' -> ^(ASSIGN ID expr) // tree notation
@@ -78,12 +81,11 @@ stmt: expr ';' -> expr  // tree rewrite syntax
     | PRINT^ expr (','! expr)* ';'!
     ;
 
-prog
-    : (stmt {
-            pANTLR3_STRING s = $stmt.tree->toStringTree($stmt.tree);
-            assert(s->chars);
-            printf("tree \%s\n", s->chars);
-    })+
+defid_expr
+    : DEF! defid (','! defid)* 
+    ;
+defid
+    : ID^ (ASSIGN! expr)?
     ;
 
 MOD: '%';
