@@ -9,8 +9,9 @@ options {
 }
 // The suffix '^' means make it a root.
 // The suffix '!' means ignore it.
-expr: plus_minusExpr ((COMMA^) plus_minusExpr)*
+expr: multExpr ((PLUS^ | MINUS^) multExpr)*
     ;
+
 PLUS: '+';
 MINUS: '-';
 plus_minusExpr

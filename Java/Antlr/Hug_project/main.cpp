@@ -7,12 +7,36 @@
 using std::map;
 using std::string;
 using std::cout;
-
+using std::endl;
 class ExprTreeEvaluator {
+    ExprTreeEvaluator *father;
     map<string,int> memory;
 public:
     int run(pANTLR3_BASE_TREE);
+    ExprTreeEvaluator() : father(nullptr) {}
+    ExprTreeEvaluator(ExprTreeEvaluator *father) : father(father) {}
+    int getVal(string name);
+    int setVal(string name, int val);
 };
+
+int ExprTreeEvaluator::getVal(string name) {
+    printf("get memory : %s\n", name.c_str());
+    ExprTreeEvaluator *p = this;
+    while (p != nullptr) {
+        if (p->memory.find(name) != p->memory.end()) {
+            return p->memory[name];
+        }
+        p = p->father;
+    }
+    //throw runtime_error(name + " is Undeclared");
+    return -1;
+}
+
+int ExprTreeEvaluator::setVal(string name, int val) {
+    printf("set %s = %d\n", name.c_str(), val);
+    this->memory[name] = val;
+    return 1;
+}
 
 pANTLR3_BASE_TREE getChild(pANTLR3_BASE_TREE, unsigned);
 
@@ -30,10 +54,11 @@ int main(int argc, char* argv[])
     tokens = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lex));
     parser = hlParserNew(tokens);
     hlParser_prog_return r = parser->prog(parser);
+    cout << "parser tree is done!" << endl;
     pANTLR3_BASE_TREE tree = r.tree;
     ExprTreeEvaluator eval;
     int rr = eval.run(tree);
-    cout << "Evaluator result: " << rr << '\n';
+    //cout << "Evaluator result: " << rr << '\n';
     parser->free(parser);
     tokens->free(tokens);
     lex->free(lex);
@@ -57,7 +82,7 @@ int ExprTreeEvaluator::run(pANTLR3_BASE_TREE tree)
         }
         case ID: {
             string var(getText(tree));
-            return memory[var];
+            return this->getVal(var);
         }
         case PLUS:
             return run(getChild(tree,0)) + run(getChild(tree,1));
@@ -70,8 +95,27 @@ int ExprTreeEvaluator::run(pANTLR3_BASE_TREE tree)
         case ASSIGN: {
             string var(getText(getChild(tree,0)));
             int val = run(getChild(tree,1));
-            memory[var] = val;
+            this->setVal(var, val);
             return val;
+        }
+        case DEF: {
+            int k = tree->getChildCount(tree);
+            for (int i = 0; i < k; i++) {
+                string var(getText(getChild(tree, i)));
+                this->setVal(var, 0);
+            }
+            
+            return 0;
+        }
+        case BLOCK: {
+            ExprTreeEvaluator newExpr(this);
+            int k = tree->getChildCount(tree);
+            int r = 0;
+            for(int i = 0; i < k; i++) {
+                r = newExpr.run(getChild(tree, i));
+            }
+            cout << "The Block result: " << r << endl;
+            return r;
         }
         default:
             cout << "Unhandled token: #" << tok->type << '\n';
