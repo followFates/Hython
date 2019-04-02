@@ -7,18 +7,20 @@
 
 #ifndef _PARAMATER_H
 #define _PARAMATER_H
-
-#include "hlLexer.h"
-#include "hlParser.h"
+#include "../src/hlLexer.h"
+#include "../src/hlParser.h"
 #include <cassert>
 #include <map>
 #include <string>
+#include <string.h>
 #include <iostream>
 #include <stdexcept>
 
-pANTLR3_BASE_TREE getChild(pANTLR3_BASE_TREE, unsigned);
-
-const char* getText(pANTLR3_BASE_TREE tree);
+using std::map;
+using std::string;
+using std::cout;
+using std::endl;
+using std::runtime_error;
 
 class Paramters {
 public :
@@ -37,9 +39,9 @@ public :
     virtual int run(pANTLR3_BASE_TREE, Paramters *) = 0;
     static int MasterRun(pANTLR3_BASE_TREE, Paramters *);
     friend IMaster *getMasterLink();
+private:
     static IMaster *head;
     IMaster *next;
-private:
 };
 
 class BinaryMaster : public IMaster {
@@ -52,6 +54,7 @@ class ProgramMaster : public IMaster {
 public:
     bool Test(pANTLR3_BASE_TREE );
     int run(pANTLR3_BASE_TREE, Paramters *);
+};
 
 class LoopMaster : public IMaster {
 public : 
@@ -63,7 +66,11 @@ public :
 class ValueMaster : public IMaster {
 public :
     bool Test(pANTLR3_BASE_TREE );
-    int run(pANTLR3_BASE_TREE );
+    int run(pANTLR3_BASE_TREE, Paramters *);
 };
+
+pANTLR3_BASE_TREE getChild(pANTLR3_BASE_TREE, unsigned);
+
+const char* getText(pANTLR3_BASE_TREE tree);
 
 #endif

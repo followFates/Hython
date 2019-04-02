@@ -1,4 +1,24 @@
-#include "paramater.h"
+#include "./paramater.h"
+
+int Paramters::getVal(string var) {
+    if (memory.find(var) == memory.end()) {
+        if (father == nullptr) throw runtime_error("unknown paramters!");
+        return father->getVal(var);
+    }
+    return memory[var];
+}
+
+int Paramters::setVal(string var, int val) { //仅实现不可以初始化
+    if (memory.find(var) == memory.end()) {
+        if (father == nullptr) throw runtime_error("unknown paramters!");
+        return father->setVal(var, val);
+    }
+    return (memory[var] = val);
+}
+
+int Paramters::setVal(string var) {//默认初始化
+    return (memory[var] = 0);
+}
 
 IMaster *IMaster::head = nullptr; 
 
@@ -39,7 +59,6 @@ bool BinaryMaster::Test(pANTLR3_BASE_TREE tree) {
             case MINUS:
             case TIMES:
             case ASSIGN:
-            case LITTLE:
                 return true;
         }
     }
@@ -117,9 +136,10 @@ int BinaryMaster::run(pANTLR3_BASE_TREE tree, Paramters *param) {
             int b = IMaster::MasterRun(getChild(tree, 1), param);
             return a * b;
         }
-        case ASSIGN: {
+        case ASSIGN: {//赋值操作：先判断变量var是否合法
             string var(getText(getChild(tree,0)));
             int val = IMaster::MasterRun(getChild(tree, 1), param);
+            param->getVal(var);
             param->setVal(var, val);
             return val;
         }
@@ -135,7 +155,7 @@ bool ProgramMaster::Test(pANTLR3_BASE_TREE tree) {
             case BLOCK:
             case DEF:
             case IF:
-            case ELSE:
+            case PRINT:
                 return true;
         }
     }
@@ -167,9 +187,22 @@ int ProgramMaster::run(pANTLR3_BASE_TREE tree, Paramters *param) {
             int k = tree->getChildCount(tree);
             for (int i = 0; i < k; i++) {
                 string var(getText(getChild(tree, i)));
+                int val = IMaster::MasterRun(getChild(getChild(tree, i), 0), param);
                 param->setVal(var);
+                param->setVal(var, val);
             }
             return 0;
+        }
+        case PRINT: {//输出PRINT下面的孩子节点
+            int k = tree->getChildCount(tree);
+            for (int i = 0; i < k; i++) {
+                string var(getText(getChild(tree, i)));
+                int val = IMaster::MasterRun(getChild(tree, i), param);
+                if (i != 0) cout << " ";
+                cout << val;
+            }
+            cout << endl;
+            return 0; 
         }
         default : throw runtime_error("unknown token type!");
     }
@@ -195,8 +228,11 @@ int LoopMaster::run(pANTLR3_BASE_TREE tree, Paramters *param) {
                 Paramters new_param(param);
                 int k = tree->getChildCount(tree);
                 int r = 0;
-                for (int i = 0; i < k; i++) {
-                    r = IMaster::MasterRun(getChild(tree, i), &new_param);
+                IMaster::MasterRun(getChild(tree, 0), param);
+                while (IMaster::MasterRun(getChild(tree, 1), param)) {
+                    IMaster::MasterRun(getChild(tree, 3), param);
+                    IMaster::MasterRun(getChild(tree, 2), param);
+                    r++;
                 }
                 return r;
             }

@@ -1,0 +1,12 @@
+{
+    def i = 100;
+    for (def i = 2; i < 5; i = i + 1) {
+        def flag = 1;
+        for (def j = 2; j <= i; j = j + 1) {
+            if (i % j == 0) {
+                flag = 0;
+            }
+        }
+        print flag;
+    }
+}
