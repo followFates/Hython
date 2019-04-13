@@ -1,0 +1,17 @@
+{
+   def i = "123";
+    print i + 4;
+    i = 123;
+    print i + 4;
+    i = 12.3;
+    print i + 4;
+    for (def i = 2; i <= 100; i = i + 1) {
+        def flag = 1;
+        for (def j = 2; j * j && flag; j = j + 1) {
+            if (i % j == 0) {
+                flag = 0;
+            }
+        }
+        if (flag) print i + "is prime";
+    }
+}
